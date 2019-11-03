@@ -1,0 +1,22 @@
+{
+  "name": "static-maps-cli",
+  "version": "1.0.0",
+  "description": "Create static maps for MapKit",
+  "main": "mapkit-snapshots.js",
+  "bin": {
+    "mapkit-snapshots": "./mapkit-snapshots.js"
+  },
+  "dependencies": {
+    "better-opn": "^1.0.0",
+    "fs": "^0.0.1-security",
+    "jwa": "^1.4.1",
+    "opn": "^6.0.0",
+    "open": "^7.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "testCommand"
+  },
+  "author": "roblabs",
+  "license": "SEE LICENSE IN LICENSE.txt"
+}
