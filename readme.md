@@ -1,5 +1,12 @@
 # Static Maps from a URL
 
+
+Generate a URL to display a map from a Apple Maps Web Snapshot.  
+
+Find the source code at [roblabs/static-maps-cli](https://github.com/roblabs/static-maps-cli)
+
+---
+
 ``` bash
 
 # update your credentials in `mapkit-snapshots.js` then install and run
