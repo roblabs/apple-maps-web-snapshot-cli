@@ -1,5 +1,12 @@
-# Static Maps from a URL
+# Maps Web Snapshot
 
+At WWDC 2019, Apple announced Maps Web Snapshots for creating a static map from a URL.  
+
+* https://developer.apple.com/documentation/snapshots
+* Web service endpoint  — https://developer.apple.com/documentation/snapshots/create_a_maps_web_snapshot
+
+
+## Usage
 
 Generate a URL to display a map from a Apple Maps Web Snapshot.  
 
@@ -22,12 +29,6 @@ npm install -g
 mapkit-snapshots
 ```
 
-# Maps Web Snapshot
-
-At WWDC 2019, Apple announced Maps Web Snapshots for creating a static map from a URL.  
-
-* https://developer.apple.com/documentation/snapshots
-* Web service endpoint  — https://developer.apple.com/documentation/snapshots/create_a_maps_web_snapshot
 
 ## Apple MapKit JS Examples
 
