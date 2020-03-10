@@ -10,23 +10,50 @@ At WWDC 2019, Apple announced Maps Web Snapshots for creating a static map from 
 
 Generate a URL to display a map from a Apple Maps Web Snapshot.  
 
-Find the source code at [roblabs/static-maps-cli](https://github.com/roblabs/static-maps-cli)
+Find the source code at [roblabs/apple-maps-web-snapshot-cli](https://github.com/roblabs/apple-maps-web-snapshot-cli)
+
+See the sample GeoJSON, `null-island.geojson` for example valid properties
+
+``` Javascript
+"properties": {
+  "center": [20, 20],
+  "display_point": {
+    "type": "Point","coordinates": [10,10]
+  },
+  "z": 2,
+  "spn": [1.0, 1.0],
+  "size": [600, 400],
+  "scale": 1,
+  "t": "mutedStandard",
+  "colorScheme": "dark",
+  "poi": 1,
+  "lang": "en-US",
+  "annotations": [],
+  "overlays": [],
+  "referer": "",
+  "expires": 3155673601
+}
+```
 
 ---
 
 ``` bash
 
-# update your credentials in `mapkit-snapshots.js` then install and run
-  # privateKey
-  # teamId
-  # keyId
+# update your credentials in `config.json` then install and run
+
+# config.json
+{
+  "privateKey": "AuthKey_XXXXXXXXXX.p8",
+  "teamId": "XXXXXXXXXX",
+  "keyId":  "YYYYYYYYYY"
+}
 
 # install
-npm install -g
+npm install
 
 # run and inspect output
 # MapKit JS
-mapkit-snapshots
+mapkit-snapshots.js null-island.geojson -c config.json
 ```
 
 

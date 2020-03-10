@@ -1,0 +1,30 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "center": [20, 20],
+        "display_point": {
+          "type": "Point","coordinates": [10,10]
+        },
+        "z": 2,
+        "spn": [1.0, 1.0],
+        "size": [600, 400],
+        "scale": 1,
+        "t": "mutedStandard",
+        "colorScheme": "dark",
+        "poi": 1,
+        "lang": "en-US",
+        "annotations": [],
+        "overlays": [],
+        "referer": "",
+        "expires": 3155673601
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0,0]
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 {
-  "name": "static-maps-cli",
-  "version": "1.0.0",
+  "name": "apple-maps-web-snapshot-cli",
+  "version": "1.0.2",
   "description": "Create static maps for MapKit",
   "main": "mapkit-snapshots.js",
   "bin": {
@@ -8,15 +8,26 @@
   },
   "dependencies": {
     "better-opn": "^1.0.0",
-    "fs": "^0.0.1-security",
+    "concat-stream": "^2.0.0",
+    "fs": "0.0.1-security",
     "jwa": "^1.4.1",
-    "opn": "^6.0.0",
-    "open": "^7.0.0"
+    "minimist": "^1.2.0",
+    "open": "^7.0.0",
+    "opn": "^6.0.0"
   },
   "devDependencies": {},
   "scripts": {
     "test": "testCommand"
   },
   "author": "roblabs",
-  "license": "SEE LICENSE IN LICENSE.txt"
+  "license": "SEE LICENSE IN LICENSE.txt",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/roblabs/apple-maps-web-snapshot-cli.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/roblabs/apple-maps-web-snapshot-cli/issues"
+  },
+  "homepage": "https://github.com/roblabs/apple-maps-web-snapshot-cli#readme"
 }
