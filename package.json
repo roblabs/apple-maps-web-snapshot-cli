@@ -7,15 +7,16 @@
     "mapkit-snapshots": "./mapkit-snapshots.js"
   },
   "dependencies": {
+    "@mapbox/polyline": "^1.1.1",
     "better-opn": "^1.0.0",
     "concat-stream": "^2.0.0",
     "fs": "0.0.1-security",
+    "jsonwebtoken": "^8.5.1",
     "jwa": "^1.4.1",
     "minimist": "^1.2.0",
     "open": "^7.0.0",
     "opn": "^6.0.0"
   },
-  "devDependencies": {},
   "scripts": {
     "test": "testCommand"
   },

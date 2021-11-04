@@ -1,5 +1,5 @@
 {
-  "privateKey": "AuthKey_XXXXXXXXXX.p8",
-  "teamId": "XXXXXXXXXX",
-  "keyId": "XXXXXXXXXX"
+  "teamId":             "XXXXXXXXXX",
+  "keyId":              "YYYYYYYYYY"
+  "privateKey": "AuthKey_YYYYYYYYYY.p8",
 }

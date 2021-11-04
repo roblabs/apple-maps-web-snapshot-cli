@@ -2,11 +2,41 @@
 
 At WWDC 2019, Apple announced Maps Web Snapshots for creating a static map from a URL.  
 
-* https://developer.apple.com/documentation/snapshots
-* Web service endpoint  — https://developer.apple.com/documentation/snapshots/create_a_maps_web_snapshot
+* Documentation at [developer.apple.com/documentation/snapshots](https://developer.apple.com/documentation/snapshots)
+* Maps Snapshot Studio from Apple — [maps.developer.apple.com/snapshot](https://maps.developer.apple.com/snapshot)
+* Web service endpoint and notes on the query parameters  — [developer.apple.com/documentation/snapshots/create_a_maps_web_snapshot](https://developer.apple.com/documentation/snapshots/create_a_maps_web_snapshot)
+* Developer Forum with the tag: [Maps Web Snapshots](https://developer.apple.com/forums/tags/maps-web-snapshots)
+  * Forum thread on [Image annotations larger than 50px](https://developer.apple.com/forums/thread/655042)
+* Announcement from the Apple Developer Forums (around WWDC 2020):
+  * [*Now Available: Image Annotations on Maps Web Snapshots*](https://developer.apple.com/forums/thread/649750)
 
 
 ## Usage
+
+Update your credentials in `config.json` then install and run
+
+```bash
+# config.json
+#   Do not commit your secrets
+{
+  "teamId":             "XXXXXXXXXX",
+  "keyId":              "YYYYYYYYYY"
+  "privateKey": "AuthKey_YYYYYYYYYY.p8",
+}
+```
+
+### Online help
+
+Online help is available
+
+```bash
+mapkit-snapshots.js
+```
+
+> ```
+Usage:
+  mapkit-snapshots.js <file.geojson> -c config.json     # -c pass in privateKey, teamId, keyId
+  mapkit-snapshots.js <file.geojson> -c config.json -o  # -o opens in default browser```
 
 Generate a URL to display a map from a Apple Maps Web Snapshot.  
 
@@ -38,16 +68,6 @@ See the sample GeoJSON, `null-island.geojson` for example valid properties
 ---
 
 ``` bash
-
-# update your credentials in `config.json` then install and run
-
-# config.json
-{
-  "privateKey": "AuthKey_XXXXXXXXXX.p8",
-  "teamId": "XXXXXXXXXX",
-  "keyId":  "YYYYYYYYYY"
-}
-
 # install
 npm install
 
@@ -122,3 +142,16 @@ This repo shows working samples of Maps Web Snapshots and Node JS sample code fo
 | **`overlays`** - Example of [Overlays](https://developer.apple.com/documentation/snapshots/overlay).    The array of JSON `Overlay` objects, which draws a red dashed line over 3 points, is shown:<br> `[{"points":["32.73,-117.19","32.71,-117.17","32.69,-117.16"],`<br>`"strokeColor":"ff0000","lineWidth":2,"lineDash":[10,5]}`<br>`]`  | ![](assets/overlays/snapshot.png) |
 |  Live example of Overlays |  [signIt(\"center=San%20Diego,%20California&\<urlEncoded Overlay\>\")](https://snapshot.apple-mapkit.com/api/v1/snapshot?center=San%20Diego,%20California&overlays=%5B%7B%22points%22%3A%5B%2232.732373%2C-117.197503%22%2C%2232.715104%2C-117.174038%22%2C%2232.699945%2C-117.169792%22%5D%2C%22strokeColor%22%3A%22ff0000%22%2C%22lineWidth%22%3A2%2C%22lineDash%22%3A%5B10%2C5%5D%7D%5D&teamId=J7V35W7ES8&keyId=VKGGG3L5BX&signature=WYbdsjcE22KI8tCrxM0YJJdYFfNgsC58OlhpTatdszcC2o53A-EDW5J4XbsCxhdEv4jFy_DW3Rq19jCBAc7q6w) |
 | Live example of Annotations & Overlays, together|  [signIt(\"center=San%20Diego,%20California&\<urlEncoded Annotation &  Overlay\>\")](https://snapshot.apple-mapkit.com/api/v1/snapshot?center=San%20Diego,%20California&annotations=%5B%7B%22point%22%3A%2232.732373%2C-117.197503%22%2C%22color%22%3A%22blue%22%2C%22glyphText%22%3A%22A%22%2C%22markerStyle%22%3A%22large%22%7D%2C%7B%22point%22%3A%2232.715104%2C-117.174038%22%2C%22color%22%3A%2200ff00%22%2C%22glyphText%22%3A%229%22%2C%22markerStyle%22%3A%22balloon%22%7D%2C%7B%22point%22%3A%2232.699945%2C-117.169792%22%2C%22color%22%3A%22red%22%2C%22glyphText%22%3A%22a%22%2C%22markerStyle%22%3A%22dot%22%7D%5D&overlays=%5B%7B%22points%22%3A%5B%2232.732373%2C-117.197503%22%2C%2232.715104%2C-117.174038%22%2C%2232.699945%2C-117.169792%22%5D%2C%22strokeColor%22%3A%22ff0000%22%2C%22lineWidth%22%3A2%2C%22lineDash%22%3A%5B10%2C5%5D%7D%5D&teamId=J7V35W7ES8&keyId=VKGGG3L5BX&signature=m9UAKoC0ShqSpMTHAvIlH2R3qFllvtDtJkchCHRYu6MB69MjsX09FNELsuD3jCegnkr1QV0JIsv5r9nhLlNzrw) |
+
+
+### Release Log
+
+<!--
+// Generate `git log` format with
+git log --date=format:'%b %d, %Y' --pretty=format:"%ad - %s"
+-->
+
+Nov 04, 2021 - Add command line options:  `-c` for credentials.  `-o` to open in browser.
+Mar 09, 2020 - Pass in values from GeoJSON.  Pass in credentials via `config.json`.
+Nov 04, 2019 - Update Javascript example for Annotations & Overlays.
+Nov 03, 2019 - Initial Sample Code for Maps Web Snapshots with MapKit JS

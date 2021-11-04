@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
-/*
- * Original source is found here.
+/**
+ *  Adapted from:
  *   https://developer.apple.com/documentation/snapshots/generating_a_url_and_signature_to_create_a_maps_web_snapshot
- *
 */
 
+// MARK: - Requires, Vars
 const { readFileSync } = require("fs");
 var fs = require('fs')
 const { sign } = require("jwa")("ES256");  // https://www.npmjs.com/package/jwa
@@ -13,17 +13,33 @@ const opn = require('better-opn'); // https://www.npmjs.com/package/better-opn
 var argv = require('minimist')(process.argv.slice(2))  // parse argument options
 var concat = require('concat-stream')
 var stdin
-var usage = "Usage:\n  mapkit-snapshots.js <file.geojson> -c config.json # pass in privateKey, teamId, keyId"
+var usage = "Usage:\n  mapkit-snapshots.js <file.geojson> -c config.json     # -c pass in privateKey, teamId, keyId\n  mapkit-snapshots.js <file.geojson> -c config.json -o  # -o opens in default browser"
+
+// Setup an object to write out with some reasonable defaults
+var snapshot = {};
+snapshot.config = {}
+snapshot.url = {"signature": "", "length": "", "text": ""}
+
+// Big vars
+var annotations = [], encodeAnnotations = [];
+var overlays = [],    encodeOverlays = [];
+var images = [],      encodeImages = [];
 var signThis;
+var openUrl;
 var privateKey, teamId, keyId;
 
 
- if (argv.help || argv.h) {
+// MARK: - Process CLI
+if (argv.help || argv.h) {
   console.log(usage)
   process.exit()
 }
 
 // process `config.json`
+// -c pass in privateKey, teamId, keyId
+/* Read your private key from the file system. (Never add your private key
+ * in code or in source control. Always keep it secure.)
+ */
 if (argv.c) {
   var config;
 
@@ -32,20 +48,24 @@ if (argv.c) {
     concat( function (buffer) {
       try {
           config = JSON.parse(buffer)
-          console.log(config);
-          /* Read your private key from the file system. (Never add your private key
-           * in code or in source control. Always keep it secure.)
-           */
+
           privateKey = readFileSync(config.privateKey);
-           // Replace the team ID and key ID values with your actual values.
           teamId = config.teamId;
           keyId = config.keyId;
+
+          // update snapshot
+          snapshot.config = config
         } catch (e) {
           return console.error(e)
       }
     })
   );
 
+}
+
+// -o opens in default browser
+if (argv.o) {
+  openUrl = true;
 }
 
 if (argv._[0] && argv._[0] !== '-') {
@@ -57,7 +77,8 @@ if (argv._[0] && argv._[0] !== '-') {
   process.exit(1)
 }
 
-// buffer all input
+// MARK: - Process GeoJSON
+  // Each query parameter must be URL-encoded.
 stdin.pipe(
   concat( function (buffer) {
     try {
@@ -66,122 +87,237 @@ stdin.pipe(
         return console.error(e)
     }
 
-    // Example 1:  output each feature element
-   geojson.features.forEach(element => {
+    geojson.features.forEach(iterateMapKit);
 
+    // images
+    snapshot.images = {};
+    if(images) {
+      snapshot.images = JSON.stringify(images);
+      encodeImages = encodeURIComponent(JSON.stringify(images));
+      signThis += `imgs=${encodeImages}&`
+    }
 
-     // https://developer.apple.com/documentation/snapshots/create_a_maps_web_snapshot#query-parameters
-     if(element.geometry.type === "Point") {
+    // annotations
+    snapshot.annotations = {};
+    if(Object.keys(annotations).length > 0) {
+        snapshot.annotations.annotation = JSON.stringify(annotations);
+        encodeAnnotations = encodeURIComponent(JSON.stringify(annotations));
+        snapshot.annotations.encodeURI = encodeAnnotations;
+        signThis += `annotations=${encodeAnnotations}&`
+    }
 
-       // Determine the center point of the static map in this order
-       //   1.  The IMDF property, properties.display_point
-       //   2.  properties.center
-       //   3.  If Point, then use Point
-       var lat, long;
-       if ('display_point' in element.properties) {
-         lat  = element.properties.display_point.coordinates[1];
-         long = element.properties.display_point.coordinates[0];
-       } else if ('center' in element.properties) {
-         lat  = element.properties.center[1];
-         long = element.properties.center[0];
-       } else {
-         lat  = element.geometry.coordinates[1];
-         long = element.geometry.coordinates[0];
-       }
-       signThis = `center=${lat},${long}&`;
-       console.log(signThis)
+    // overlays
+    snapshot.overlays = {};
+    if(Object.keys(overlays).length > 0) {
+      snapshot.overlays.overlay = JSON.stringify(overlays);
+      encodeOverlays = encodeURIComponent(JSON.stringify(overlays));
+      snapshot.overlays.encodeURI = encodeOverlays;
+      signThis += `overlays=${encodeOverlays}&`
+    }
 
-      // Handle cases where both `z` &`spn` are present.
-      // Apple > When both z and spn are provided, spn takes precedence over z.
-      if ('spn' in element.properties) {
-        latDegrees = element.properties.spn[0];
-        lonDegrees = element.properties.spn[1];
-        signThis += `spn=${latDegrees},${lonDegrees}&`
-        console.log(signThis)
-      } else if ('z' in element.properties) {
-        signThis += `z=${element.properties.z}&`
-        console.log(signThis)
-      }
+    try {
+      signIt(signThis)
+    } catch (e) {
+      console.log("signIt Error:  \n\t*** Please verify the settings in config.json\n")
+      return console.error(e)
+    } finally {
+    }
 
-      if ('size' in element.properties) {
-        width = element.properties.size[0];
-        height = element.properties.size[1];
-        signThis += `size=${width}x${height}&`
-        console.log(signThis)
-      }
-
-      if ('scale' in element.properties) {
-        signThis += `scale=${element.properties.scale}&`
-        console.log(signThis)
-      }
-
-      if ('t' in element.properties & element.properties.t != "") {
-        signThis += `t=${element.properties.t}&`
-        console.log(signThis)
-      }
-
-      if ('colorScheme' in element.properties & element.properties.colorScheme != "") {
-        signThis += `colorScheme=${element.properties.colorScheme}&`
-        console.log(signThis)
-      }
-
-      if ('poi' in element.properties) {
-        signThis += `poi=${element.properties.poi}&`
-        console.log(signThis)
-      }
-
-      if ('lang' in element.properties & element.properties.lang != "") {
-        signThis += `lang=${element.properties.lang}&`
-        console.log(signThis)
-      }
-
-      // if ('annotations' in element.properties) {
-      //   signThis += `annotations=${element.properties.colorScheme}&`
-      // Each query parameter must be URL-encoded.
-      //   encodeAnnotations = encodeURIComponent(JSON.stringify(annotations));
-      //   console.log(signThis)
-      // }
-
-      // if ('overlays' in element.properties) {
-      //   signThis += `overlays=${element.properties.colorScheme}&`
-      // Each query parameter must be URL-encoded.
-      //   encodeOverlays = encodeURIComponent(JSON.stringify(overlays));
-      //   console.log(signThis)
-      // }
-
-      if ('referer' in element.properties & element.properties.referer != "") {
-        signThis += `referer=${element.properties.referer}&`
-        console.log(signThis)
-      }
-
-      if ('expires' in element.properties) {
-        signThis += `expires=${element.properties.expires}&`
-        console.log(signThis)
-      }
-
-     }
-   });
-
-   signIt(signThis)
   })
 )
 
+// Mark: - iterateMapKit()
+// https://developer.apple.com/documentation/snapshots/create_a_maps_web_snapshot#query-parameters
+function iterateMapKit(element, index, array) {
+
+  //   Use the first `feature` for setting up parameters that are only used once (center, language, etc)
+    // TODO: should be moved to FeatureCollection root
+  if (index === 0) {
+    // Determine the center point of the static map in this order
+    //   1.  The IMDF property, properties.display_point
+    //   2.  properties.center
+    //   3.  If Point, then use Point
+    var lat, long;
+    if ("display_point" in element.properties) {
+      point = coordinate2point(element.properties.display_point.coordinates)
+    } else if ('center' in element.properties) {
+      if (typeof(element.properties.center) === "string") {
+        // The input property for `center` can be
+        //   A geocoded address is a valid value for the `center` parameter
+        //   "The string `auto` is also a valid value for the `center` parameter
+        point = encodeURIComponent(element.properties.center)
+      } else {
+        //   [long, lat] array of floats, to make it easy to reuse the GeoJSON formatting for points
+        point = coordinate2point(element.properties.center.coordinates)
+      }
+    } else if(element.geometry.type === "Point"){
+      // the `center` parameter was not set, fall back to the geometry
+      point = coordinate2point(element.geometry.coordinates)
+    }
+
+    signThis = `center=${point}&`;
+    snapshot.center = `${point}`;
+
+    // Handle cases where both `z` &`spn` are present.
+    // Apple > When both z and spn are provided, spn takes precedence over z.
+    if ('spn' in element.properties) {
+      latDegrees = element.properties.spn[0];
+      lonDegrees = element.properties.spn[1];
+      spn = `${latDegrees},${lonDegrees}`;
+      signThis += `spn=${spn}&`;
+      snapshot.spn = spn;
+    } else if ('z' in element.properties) {
+
+      if(element.properties.z < 3 || element.properties.z > 20) {
+        element.properties.z = 12
+        console.error("Out of bounds zoom level; setting to Default\nDefault: 12\nMinimum: 3\nMaximum: 20")
+      }
+      signThis += `z=${element.properties.z}&`;
+      snapshot.z = element.properties.z;
+    }
+
+    if ('size' in element.properties) {
+      width = element.properties.size[0];
+      height = element.properties.size[1];
+      size = `${width}x${height}`;
+      signThis += `size=${size}&`;
+      snapshot.size = size;
+    }
+
+    if ('scale' in element.properties) {
+     signThis += `scale=${element.properties.scale}&`;
+     snapshot.scale = element.properties.scale;
+    }
+
+    if ('t' in element.properties & element.properties.t != "") {
+      signThis += `t=${element.properties.t}&`;
+      snapshot.t = element.properties.t;
+
+      if(element.properties.t === "standard" ||
+         element.properties.t === "mutedStandard") {
+           if ('colorScheme' in element.properties & element.properties.colorScheme != "") {
+             signThis += `colorScheme=${element.properties.colorScheme}&`;
+             snapshot.colorScheme = element.properties.colorScheme;
+           }
+        }
+    }
+
+    if ('poi' in element.properties) {
+      signThis += `poi=${element.properties.poi}&`;
+      snapshot.poi = element.properties.poi;
+    }
+
+    if ('lang' in element.properties & element.properties.lang != "") {
+      signThis += `lang=${element.properties.lang}&`;
+      snapshot.lang = element.properties.lang;
+    }
+
+    if ('referer' in element.properties & element.properties.referer != "") {
+      signThis += `referer=${element.properties.referer}&`;
+      snapshot.referer = element.properties.referer;
+    }
+
+    if ('expires' in element.properties) {
+      signThis += `expires=${element.properties.expires}&`;
+      snapshot.expires = element.properties.expires;
+    }
+   }
+
+  // MARK: - annotations
+    // creates: [Annotation]
+  if (element.properties.annotation) {
+
+      // creates: [Image]
+    if (element.properties.image) {
+     images = element.properties.image
+    }
+
+    if (element.geometry.type === "MultiPoint") {
+      for (var mp = 0; mp < element.geometry.coordinates.length; mp++) {
+
+        annotation = element.properties.annotation[mp]
+        lat  = element.geometry.coordinates[mp][1]
+        long = element.geometry.coordinates[mp][0]
+        point = `${lat},${long}`
+        annotation.point = point
+
+        // remove unused parameters to make the URL smaller
+        if(annotation.glyphText === "") {
+          delete annotation.glyphText
+        }
+
+        if(annotation.markerStyle === "dot") {
+          delete annotation.glyphText
+        }
+
+        if(annotation.markerStyle === "img") {
+          delete annotation.color
+          delete annotation.glyphText
+        } else {
+          // remove unused that are related to `img`
+          delete annotation.imgIdx
+          delete annotation.offset
+        }
+
+        // set the annotation
+        annotations.push(annotation)
+        annotation = {}
+      }
+    } // if MultiPoint
+
+    // TODO:  if no points use `img`, then remove the `image` array
+  } // if annotation
+
+  // MARK: - overlays
+    // creates: [Overlay]
+  if (element.properties.hasOwnProperty("overlay")) {
+    points = [];
+
+    // Iterate over each Point in the LineString in the `overlay`
+    for (let coord = 0; coord < element.properties.overlay.geometry.coordinates.length; coord++) {
+      points.push(coordinate2point(element.properties.overlay.geometry.coordinates[coord]));
+    }
+
+    // An array of overlays to be displayed on the map, specified as an array of JSON Overlay objects.
+    overlays.push({
+        "points": points,
+        "strokeColor": element.properties.overlay.style.strokeColor,
+        "lineWidth":   element.properties.overlay.style.lineWidth,
+        "lineDash":    element.properties.overlay.style.lineDash
+    });
+  } // If `overlay` exists
+} // iterateMapKit
+
+// MARK: - signIt()
 // Creates the signature string and returns the full Snapshot request URL including the signature.
 function signIt(params) {
-    const mapkitServer = `https://snapshot.apple-mapkit.com`
-    const snapshotPath = `/api/v1/snapshot?${params}`;
-    var completePath = `${snapshotPath}&teamId=${teamId}&keyId=${keyId}`;
-
+    var mapkitServer = `https://snapshot.apple-mapkit.com`
+    var snapshotPath = `/api/v1/snapshot?${params}`;  // snapshotPath is assumed to have the trailing '&'
+    var completePath = `${snapshotPath}teamId=${teamId}&keyId=${keyId}`;
     const signature = sign(completePath, privateKey);
 
     // Append the signature to the end of the request URL, and return.
     url = `${mapkitServer}${completePath}&signature=${signature}`
 
+    snapshot.url.text = url;
+    snapshot.url.signature = signature;
+    snapshot.url.length = url.length;
+
+    console.log(snapshot);
+
     // Optionally open the result in the default browser using `opn`
-    // opn(url);
-    console.log()
-    console.log(url);
-    console.log()
+    if(openUrl) {
+      opn(snapshot.url.text);
+    }
 
     return url;
+}
+
+// Return a GeoJSON Coordinate as a string in "lat,long" format
+function coordinate2point(coordinate) {
+  lat  = coordinate[1];
+  long = coordinate[0];
+  point = `${lat},${long}`;
+
+  return point
 }

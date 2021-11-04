@@ -1,2 +1,4 @@
+
+# Do not commit your secrets
 config*.json
 *.p8
