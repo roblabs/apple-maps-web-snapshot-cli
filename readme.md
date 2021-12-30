@@ -13,7 +13,7 @@ At WWDC 2019, Apple announced Maps Web Snapshots for creating a static map from 
 
 ## Usage
 
-Update your credentials in `config.json` then install and run
+Update your credentials in `config.json` then install and run.
 
 ```bash
 # config.json
@@ -25,18 +25,27 @@ Update your credentials in `config.json` then install and run
 }
 ```
 
+``` bash
+# install
+npm install
+
+# run and inspect output
+mapkit-snapshots.js null-island.geojson -c config.json
+```
+
 ### Online help
 
-Online help is available
+Online help is available by supplying no parameters.
 
 ```bash
 mapkit-snapshots.js
 ```
 
-> ```
+```bash
 Usage:
   mapkit-snapshots.js <file.geojson> -c config.json     # -c pass in privateKey, teamId, keyId
-  mapkit-snapshots.js <file.geojson> -c config.json -o  # -o opens in default browser```
+  mapkit-snapshots.js <file.geojson> -c config.json -o  # -o opens in default browser
+```
 
 Generate a URL to display a map from a Apple Maps Web Snapshot.  
 
@@ -64,18 +73,6 @@ See the sample GeoJSON, `null-island.geojson` for example valid properties
   "expires": 3155673601
 }
 ```
-
----
-
-``` bash
-# install
-npm install
-
-# run and inspect output
-# MapKit JS
-mapkit-snapshots.js null-island.geojson -c config.json
-```
-
 
 ## Apple MapKit JS Examples
 
@@ -146,12 +143,14 @@ This repo shows working samples of Maps Web Snapshots and Node JS sample code fo
 
 ### Release Log
 
+* Dec 30, 2021 - Add output key `url` to log the signed Apple Maps Web Snapshot URL
+* Nov 04, 2021 - Add command line options:  `-c` for credentials.  `-o` to open in browser.
+* Mar 09, 2020 - Pass in values from GeoJSON.  Pass in credentials via `config.json`.
+* Nov 04, 2019 - Update Javascript example for Annotations & Overlays.
+* Nov 03, 2019 - Initial Sample Code for Maps Web Snapshots with MapKit JS
+
+
 <!--
 // Generate `git log` format with
-git log --date=format:'%b %d, %Y' --pretty=format:"%ad - %s"
+git log --pretty=format:"* %ad - %s" --date=format:'%b %d, %Y'
 -->
-
-Nov 04, 2021 - Add command line options:  `-c` for credentials.  `-o` to open in browser.
-Mar 09, 2020 - Pass in values from GeoJSON.  Pass in credentials via `config.json`.
-Nov 04, 2019 - Update Javascript example for Annotations & Overlays.
-Nov 03, 2019 - Initial Sample Code for Maps Web Snapshots with MapKit JS

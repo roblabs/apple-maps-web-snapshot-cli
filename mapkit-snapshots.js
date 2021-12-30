@@ -23,7 +23,7 @@ snapshot.url = {"signature": "", "length": "", "text": ""}
 // Big vars
 var annotations = [], encodeAnnotations = [];
 var overlays = [],    encodeOverlays = [];
-var images = [],      encodeImages = [];
+var imgs = [],      encodeImgs = [];
 var signThis;
 var openUrl;
 var privateKey, teamId, keyId;
@@ -90,19 +90,20 @@ stdin.pipe(
     geojson.features.forEach(iterateMapKit);
 
     // images
-    snapshot.images = {};
-    if(images) {
-      snapshot.images = JSON.stringify(images);
-      encodeImages = encodeURIComponent(JSON.stringify(images));
-      signThis += `imgs=${encodeImages}&`
+    snapshot.imgs = {};
+    if(Object.keys(imgs).length > 0) {
+      snapshot.imgs = JSON.stringify(imgs);
+      encodeImgs = encodeURIComponent(JSON.stringify(imgs));
+      signThis += `imgs=${encodeImgs}&`
     }
 
-    // annotations
-    snapshot.annotations = {};
+    // MARK: annotations
+    snapshot.annotationData = {};
     if(Object.keys(annotations).length > 0) {
-        snapshot.annotations.annotation = JSON.stringify(annotations);
+        snapshot.annotationData.annotation = JSON.stringify(annotations);
         encodeAnnotations = encodeURIComponent(JSON.stringify(annotations));
-        snapshot.annotations.encodeURI = encodeAnnotations;
+        snapshot.annotationData.encodeURI = encodeAnnotations;
+        snapshot.annotationData.annotationCount = annotations.length;
         signThis += `annotations=${encodeAnnotations}&`
     }
 
@@ -116,9 +117,10 @@ stdin.pipe(
     }
 
     try {
-      signIt(signThis)
+      console.log()
+      signIt(geojson.name, signThis)
     } catch (e) {
-      console.log("signIt Error:  \n\t*** Please verify the settings in config.json\n")
+      console.error("signIt Error:  \n\t*** Please verify the settings in config.json\n")
       return console.error(e)
     } finally {
     }
@@ -126,7 +128,7 @@ stdin.pipe(
   })
 )
 
-// Mark: - iterateMapKit()
+// MARK: - iterateMapKit()
 // https://developer.apple.com/documentation/snapshots/create_a_maps_web_snapshot#query-parameters
 function iterateMapKit(element, index, array) {
 
@@ -145,7 +147,7 @@ function iterateMapKit(element, index, array) {
         // The input property for `center` can be
         //   A geocoded address is a valid value for the `center` parameter
         //   "The string `auto` is also a valid value for the `center` parameter
-        point = encodeURIComponent(element.properties.center)
+        point = encodeURIComponent(element.properties.center)  /// TODO: review if we can set precision
       } else {
         //   [long, lat] array of floats, to make it easy to reuse the GeoJSON formatting for points
         point = coordinate2point(element.properties.center.coordinates)
@@ -153,6 +155,8 @@ function iterateMapKit(element, index, array) {
     } else if(element.geometry.type === "Point"){
       // the `center` parameter was not set, fall back to the geometry
       point = coordinate2point(element.geometry.coordinates)
+    } else {
+      console.error("error: ❌ No center `point` is defined.  Please set `properties.display_point` (IMDF style), or `properties.center`")
     }
 
     signThis = `center=${point}&`;
@@ -227,9 +231,9 @@ function iterateMapKit(element, index, array) {
     // creates: [Annotation]
   if (element.properties.annotation) {
 
-      // creates: [Image]
-    if (element.properties.image) {
-     images = element.properties.image
+    // creates: [Image], An array of custom images to annotate the map, specified as an array of JSON Image objects.
+    if (element.properties.imgs) {
+      imgs = element.properties.imgs
     }
 
     if (element.geometry.type === "MultiPoint") {
@@ -242,6 +246,10 @@ function iterateMapKit(element, index, array) {
         annotation.point = point
 
         // remove unused parameters to make the URL smaller
+        if(annotation.offset === "0,0") {
+          delete annotation.offset
+        }
+
         if(annotation.glyphText === "") {
           delete annotation.glyphText
         }
@@ -261,6 +269,7 @@ function iterateMapKit(element, index, array) {
 
         // set the annotation
         annotations.push(annotation)
+        snapshot.annotationSource = element.geometry.type;
         annotation = {}
       }
     } // if MultiPoint
@@ -288,9 +297,9 @@ function iterateMapKit(element, index, array) {
   } // If `overlay` exists
 } // iterateMapKit
 
-// MARK: - signIt()
+// MARK: - signIt(name, params)
 // Creates the signature string and returns the full Snapshot request URL including the signature.
-function signIt(params) {
+function signIt(name, params) {
     var mapkitServer = `https://snapshot.apple-mapkit.com`
     var snapshotPath = `/api/v1/snapshot?${params}`;  // snapshotPath is assumed to have the trailing '&'
     var completePath = `${snapshotPath}teamId=${teamId}&keyId=${keyId}`;
@@ -300,10 +309,11 @@ function signIt(params) {
     url = `${mapkitServer}${completePath}&signature=${signature}`
 
     snapshot.url.text = url;
+    snapshot.url.exec = "imagefrom " + name + " \"" + url + "\"";
     snapshot.url.signature = signature;
     snapshot.url.length = url.length;
 
-    console.log(snapshot);
+    console.log(JSON.stringify(snapshot, null, 2));
 
     // Optionally open the result in the default browser using `opn`
     if(openUrl) {
