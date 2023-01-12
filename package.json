@@ -13,7 +13,7 @@
     "fs": "0.0.1-security",
     "jsonwebtoken": "^9.0.0",
     "jwa": "^1.4.1",
-    "minimist": "^1.2.0",
+    "minimist": "^1.2.6",
     "open": "^7.0.0",
     "opn": "^6.0.0"
   },
